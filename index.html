@@ -1,0 +1,496 @@
+<!doctype html>
+<html lang="it"><head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<meta name="apple-mobile-web-app-title" content="Qualifiche">
+<meta name="theme-color" content="#1d4f7a">
+<link rel="manifest" href="manifest.json">
+<link rel="apple-touch-icon" href="icon-180.png">
+<link rel="icon" href="icon-192.png">
+<style>:root{padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px)}body{margin:0}[hidden]{display:none!important}img{max-width:100%}</style>
+<title>Registro Qualifiche</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Barlow+Condensed:wght@500;600;700&family=Barlow:wght@400;500;600&family=JetBrains+Mono:wght@400;600&display=swap">
+<style>
+/* Layout: scheda di officina a colonna singola; testata fissa con stato e PDF, sezioni come i blocchi del verbale WPQR, passate come schede con cronometro */
+:root{
+  --bg:#eef1f4; --surface:#ffffff; --sunk:#e3e8ee; --line:#cfd6de;
+  --fg:#17212b; --muted:#5b6876; --accent:#1d4f7a; --accent-fg:#ffffff;
+  --arc:#c46a00; --arc-soft:#fbead3; --ok:#2e7d4f; --ok-soft:#dcefe3; --bad:#b3261e; --bad-soft:#f8dedb;
+  --f-disp:"Barlow Condensed","Arial Narrow",Arial,sans-serif;
+  --f-body:"Barlow",system-ui,-apple-system,"Segoe UI",sans-serif;
+  --f-mono:"JetBrains Mono",ui-monospace,Menlo,monospace;
+}
+@media (prefers-color-scheme:dark){:root:not([data-theme="light"]){
+  --bg:#11161c; --surface:#19212a; --sunk:#222c37; --line:#2f3b48;
+  --fg:#e4e9ef; --muted:#97a4b2; --accent:#7fb2e0; --accent-fg:#0c1722;
+  --arc:#f0a040; --arc-soft:#3a2a14; --ok:#6cc48f; --ok-soft:#173326; --bad:#f08a80; --bad-soft:#3d1b18; color-scheme:dark}}
+:root[data-theme="dark"]{
+  --bg:#11161c; --surface:#19212a; --sunk:#222c37; --line:#2f3b48;
+  --fg:#e4e9ef; --muted:#97a4b2; --accent:#7fb2e0; --accent-fg:#0c1722;
+  --arc:#f0a040; --arc-soft:#3a2a14; --ok:#6cc48f; --ok-soft:#173326; --bad:#f08a80; --bad-soft:#3d1b18; color-scheme:dark}
+*{box-sizing:border-box}
+body{background:var(--bg);color:var(--fg);font-family:var(--f-body);font-size:16px;line-height:1.4}
+body::before{content:"";position:fixed;inset:0 0 auto;height:env(safe-area-inset-top,0px);z-index:10;background:var(--accent)}
+.wrap{max-width:760px;margin:0 auto;padding-left:max(16px,env(safe-area-inset-left,0px));padding-right:max(16px,env(safe-area-inset-right,0px));padding-block:0 96px}
+header.bar{position:sticky;top:env(safe-area-inset-top,0px);z-index:5;background:var(--accent);color:var(--accent-fg);
+  padding-left:max(16px,env(safe-area-inset-left,0px));padding-right:max(16px,env(safe-area-inset-right,0px));padding-block:10px}
+.bar-in{max-width:760px;margin:0 auto;display:flex;align-items:center;gap:10px}
+.bar h1{font-family:var(--f-disp);font-weight:700;font-size:22px;letter-spacing:.02em;margin:0;flex:1;min-width:0;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.bar .sub{font-family:var(--f-mono);font-size:11px;opacity:.8;display:block;font-weight:400;letter-spacing:0}
+.btn{font:600 15px var(--f-body);border-radius:10px;border:1px solid var(--line);background:var(--surface);color:var(--fg);padding:10px 14px;cursor:pointer;min-height:44px}
+.btn:focus-visible,input:focus-visible,select:focus-visible,textarea:focus-visible{outline:3px solid var(--arc);outline-offset:1px}
+.btn.pri{background:var(--accent);color:var(--accent-fg);border-color:var(--accent)}
+.bar .btn{background:transparent;color:var(--accent-fg);border-color:color-mix(in srgb,var(--accent-fg) 45%,transparent)}
+.bar .btn.solid{background:var(--accent-fg);color:var(--accent)}
+.btn.ghost{background:transparent}
+.btn.danger{color:var(--bad);border-color:var(--bad)}
+.btn.danger.armed{background:var(--bad);color:var(--surface)}
+.btn:disabled{opacity:.5}
+.chip{display:inline-flex;align-items:center;gap:4px;font:500 12px var(--f-mono);padding:3px 8px;border-radius:99px;background:var(--sunk);color:var(--muted);white-space:nowrap}
+.chip.ok{background:var(--ok-soft);color:var(--ok)} .chip.bad{background:var(--bad-soft);color:var(--bad)} .chip.arc{background:var(--arc-soft);color:var(--arc)}
+.bar .chip{padding:1px 7px;font-size:10.5px;margin-left:4px;vertical-align:1px;background:color-mix(in srgb,var(--accent-fg) 18%,transparent);color:var(--accent-fg)}
+section.blk{margin-top:18px}
+.blk>h2{font-family:var(--f-disp);font-weight:600;font-size:15px;text-transform:uppercase;letter-spacing:.08em;color:var(--muted);margin:0 0 8px;display:flex;gap:8px;align-items:baseline}
+.blk>h2 b{color:var(--accent);font-weight:700}
+.card{background:var(--surface);border:1px solid var(--line);border-radius:14px;padding:14px}
+.grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(150px,1fr));gap:12px}
+.grid .full{grid-column:1/-1}
+label.f{display:flex;flex-direction:column;gap:4px;min-width:0}
+label.f>span{font-size:12px;font-weight:600;color:var(--muted);letter-spacing:.02em}
+input,select,textarea{font:500 16px var(--f-body);color:var(--fg);background:var(--sunk);border:1px solid var(--line);border-radius:9px;padding:10px;width:100%;min-height:44px}
+input.num{font-family:var(--f-mono);font-variant-numeric:tabular-nums}
+textarea{min-height:60px;resize:vertical}
+.calc{font:600 16px var(--f-mono);font-variant-numeric:tabular-nums;padding:10px;border-radius:9px;background:transparent;border:1px dashed var(--line);min-height:44px;display:flex;align-items:center}
+.hint{font-size:12px;color:var(--muted);margin:8px 0 0}
+/* elenco */
+.list{display:flex;flex-direction:column;gap:10px;margin-top:14px}
+.row{display:grid;grid-template-columns:1fr auto;gap:4px 10px;align-items:center;background:var(--surface);border:1px solid var(--line);border-radius:14px;padding:12px 14px;cursor:pointer;text-align:left;font:inherit;color:inherit;width:100%}
+.row:hover{border-color:var(--accent)}
+.row .t{font-family:var(--f-disp);font-weight:600;font-size:19px;min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.row .m{grid-column:1/-1;font-size:13px;color:var(--muted);display:flex;flex-wrap:wrap;gap:6px 12px}
+.row .m .mono{font-family:var(--f-mono)}
+.empty{border:1.5px dashed var(--line);border-radius:14px;padding:22px;text-align:center;color:var(--muted)}
+.toolbar{display:flex;gap:10px;flex-wrap:wrap;align-items:center;margin-top:16px}
+.toolbar input{flex:1;min-width:0}
+/* passate */
+.passes{display:flex;flex-direction:column;gap:12px}
+.pass{background:var(--surface);border:1px solid var(--line);border-radius:14px;overflow:hidden}
+.pass.running{border-color:var(--arc);box-shadow:0 0 0 2px var(--arc-soft)}
+.pass-h{display:flex;align-items:center;gap:10px;padding:10px 14px;background:var(--sunk)}
+.pass-h .n{font-family:var(--f-disp);font-weight:700;font-size:22px;color:var(--accent);min-width:2.2ch}
+.pass-h .q{margin-left:auto;display:flex;gap:6px;flex-wrap:wrap;justify-content:flex-end}
+.pass-b{padding:12px 14px;display:grid;grid-template-columns:repeat(auto-fill,minmax(120px,1fr));gap:10px}
+.timer{grid-column:1/-1;display:flex;align-items:center;gap:12px;background:var(--arc-soft);border-radius:12px;padding:10px 12px}
+.timer .clock{font:600 30px var(--f-mono);font-variant-numeric:tabular-nums;color:var(--arc);flex:1;min-width:0}
+.timer .btn{border-color:var(--arc);color:var(--arc);background:var(--surface);min-width:96px}
+.pass.running .timer .btn.go{background:var(--arc);color:var(--surface)}
+.pass-f{display:flex;gap:8px;justify-content:flex-end;padding:0 14px 12px;flex-wrap:wrap}
+.summary{display:grid;grid-template-columns:repeat(auto-fit,minmax(130px,1fr));gap:10px}
+.stat{background:var(--surface);border:1px solid var(--line);border-radius:12px;padding:10px 12px}
+.stat span{display:block;font-size:12px;color:var(--muted);font-weight:600}
+.stat b{font:600 20px var(--f-mono);font-variant-numeric:tabular-nums}
+.toast{position:fixed;left:50%;transform:translateX(-50%);bottom:calc(18px + env(safe-area-inset-bottom,0px));background:var(--fg);color:var(--bg);padding:10px 16px;border-radius:10px;font-weight:600;z-index:20;max-width:calc(100% - 32px)}
+.ex{font:600 11px var(--f-mono);text-transform:uppercase;letter-spacing:.06em;color:var(--arc)}
+.actions-end{display:flex;gap:10px;flex-wrap:wrap;justify-content:space-between;margin-top:22px}
+@media (prefers-reduced-motion:no-preference){.pass.running .clock{animation:pulse 1.2s ease-in-out infinite}@keyframes pulse{50%{opacity:.65}}}
+</style>
+
+</head><body>
+<header class="bar"><div class="bar-in">
+  <button class="btn" id="btnBack" hidden aria-label="Torna all'elenco">‹</button>
+  <h1 id="barTitle">Registro Qualifiche<span class="sub"><span id="barSub">Verbali WPQR · UNI EN ISO 15614-1</span> <span class="chip" id="syncChip">…</span></span></h1>
+  <button class="btn solid" id="btnPdf" hidden>PDF</button>
+</div></header>
+
+<main class="wrap">
+  <!-- ELENCO -->
+  <div id="viewList">
+    <div class="toolbar">
+      <input id="search" type="search" placeholder="Cerca saldatore, verbale, materiale…" aria-label="Cerca">
+      <button class="btn pri" id="btnNew">+ Nuovo verbale</button>
+    </div>
+    <div class="list" id="list">
+      <div class="empty">Caricamento dei verbali…</div>
+    </div>
+    <p class="hint" id="storeHint"></p>
+    <div class="toolbar" style="margin-top:28px;justify-content:flex-end">
+      <button class="btn ghost" id="btnBackup">Backup su iCloud / File</button>
+      <label class="btn ghost" for="fileRestore" style="display:inline-flex;align-items:center">Ripristina da file</label>
+      <input type="file" id="fileRestore" accept="application/json,.json" hidden>
+    </div>
+  </div>
+
+  <!-- EDITOR -->
+  <div id="viewEdit" hidden>
+    <section class="blk"><h2><b>1</b> Dati generali</h2>
+      <div class="card grid">
+        <label class="f full"><span>Azienda esecutrice</span><input id="g_azienda" data-k="gen.azienda"></label>
+        <label class="f"><span>N° verbale / WPQR</span><input id="g_verbale" data-k="gen.verbale"></label>
+        <label class="f"><span>Data prova</span><input id="g_data" type="date" data-k="gen.data"></label>
+        <label class="f full"><span>Norma di riferimento</span><select id="g_norma" data-k="gen.norma"></select></label>
+        <label class="f"><span>Saldatore / operatore</span><input id="g_sald" data-k="gen.saldatore" list="dlSald" autocomplete="off"></label>
+        <label class="f"><span>Punzone / matricola</span><input id="g_punz" data-k="gen.punzone"></label>
+        <label class="f"><span>N° pWPS di riferimento</span><input id="g_pwps" data-k="gen.pwps" list="dlPwps" autocomplete="off"></label>
+        <label class="f"><span>Ente / ispettore</span><input id="g_ente" data-k="gen.ente" list="dlEnte" autocomplete="off"></label>
+      </div>
+    </section>
+
+    <section class="blk"><h2><b>2</b> Giunto, materiale e procedimento</h2>
+      <div class="card grid">
+        <label class="f full"><span>Procedimento (EN ISO 4063)</span><select id="j_proc" data-k="giu.processo"></select></label>
+        <label class="f"><span>Tipo di giunto</span><select id="j_tipo" data-k="giu.tipo"></select></label>
+        <label class="f"><span>Posizione (ISO 6947)</span><select id="j_pos" data-k="giu.posizione"></select></label>
+        <label class="f"><span>Materiale base</span><input id="j_mat" data-k="giu.materiale" list="dlMat" autocomplete="off"></label>
+        <label class="f"><span>Spessore (mm)</span><input id="j_sp" class="num" inputmode="decimal" data-k="giu.spessore"></label>
+        <label class="f"><span>Diametro tubo (mm)</span><input id="j_dt" class="num" inputmode="decimal" data-k="giu.diamTubo" placeholder="lamiera: vuoto"></label>
+        <label class="f"><span>Materiale d'apporto</span><input id="j_app" data-k="giu.apporto" list="dlApp" autocomplete="off"></label>
+        <label class="f"><span>Ø apporto (mm)</span><select id="j_dia" data-k="giu.diametro"></select></label>
+        <label class="f"><span>Gas di protezione</span><select id="j_gas" data-k="giu.gas"></select></label>
+        <label class="f"><span>Portata gas (l/min)</span><input id="j_port" class="num" inputmode="decimal" data-k="giu.portata"></label>
+        <label class="f"><span>Preriscaldo (°C)</span><input id="j_pre" class="num" inputmode="decimal" data-k="giu.preriscaldo"></label>
+        <label class="f"><span>Interpass max (°C)</span><input id="j_tim" class="num" inputmode="decimal" data-k="giu.interpassMax"></label>
+        <label class="f"><span>Rendimento k (EN 1011-1)</span><input id="j_k" class="num" inputmode="decimal" data-k="giu.k"></label>
+      </div>
+      <p class="hint">k si imposta da solo scegliendo il procedimento (0,8 MMA/MAG/FCAW · 0,6 TIG · 1,0 SAW); puoi correggerlo a mano.</p>
+    </section>
+
+    <section class="blk"><h2><b>3</b> Parametri per passata</h2>
+      <div class="summary" id="summary"></div>
+      <div class="passes" id="passes" style="margin-top:12px"></div>
+      <div class="toolbar"><button class="btn pri" id="btnAddPass">+ Aggiungi passata</button>
+        <span class="hint" style="margin:0">La nuova passata copia i parametri della precedente.</span></div>
+    </section>
+
+    <section class="blk"><h2><b>4</b> Firme</h2>
+      <div class="card grid">
+        <label class="f"><span>Saldatore / operatore</span><input id="s_s" data-k="firme.saldatore"></label>
+        <label class="f"><span>Responsabile qualità</span><input id="s_q" data-k="firme.rq"></label>
+        <label class="f"><span>Ente terzo / ispettore</span><input id="s_e" data-k="firme.ente"></label>
+        <label class="f full"><span>Note generali</span><textarea id="s_note" data-k="note"></textarea></label>
+      </div>
+    </section>
+
+    <div class="actions-end">
+      <button class="btn danger" id="btnDel">Elimina verbale</button>
+      <div style="display:flex;gap:10px;flex-wrap:wrap">
+        <button class="btn" id="btnDup">Duplica</button>
+        <button class="btn pri" id="btnPdf2">Esporta PDF</button>
+      </div>
+    </div>
+  </div>
+</main>
+
+<datalist id="dlSald"></datalist><datalist id="dlPwps"></datalist><datalist id="dlEnte"></datalist>
+<datalist id="dlMat"></datalist><datalist id="dlApp"></datalist>
+<div class="toast" id="toast" hidden></div>
+
+<script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf-autotable/3.8.2/jspdf.plugin.autotable.min.js"></script>
+<script>
+"use strict";
+/* ---------- liste ---------- */
+const PROC=[["111","111 · MMA elettrodo rivestito",.8],["114","114 · Filo animato senza gas",.8],["121","121 · SAW arco sommerso",1],
+ ["131","131 · MIG",.8],["135","135 · MAG filo pieno",.8],["136","136 · FCAW filo animato",.8],["138","138 · MCAW filo metal-cored",.8],
+ ["141","141 · TIG",.6],["142","142 · TIG senza apporto",.6],["15","15 · Plasma",.6]];
+const NORME=["UNI EN ISO 15614-1","UNI EN ISO 9606-1","UNI EN ISO 14732","ASME IX"];
+const TIPI=["BW","FW Single Pass","FW Multipass","BW tubo","FW tubo/lamiera"];
+const POS=["PA","PB","PC","PD","PE","PF","PG","PH","PJ","H-L045","J-L045"];
+const DIA=["","0.8","1.0","1.2","1.6","2.0","2.4","2.5","3.2","4.0","5.0"];
+const GAS=["","I1 · Ar 99,99%","M12 · Ar 98% + CO2 2%","M13 · Ar 98% + O2 2%","M20 · Ar 92% + CO2 8%","M21 · Ar 82% + CO2 18%","C1 · CO2 100%","I3 · Ar + He","N2 · Ar + N2 (backing)","Nessuno"];
+const POL=["DC EP","DC EN","AC"];
+const MAT=["S235JR","S275JR","S355J2","P235GH","P265GH","P355NH","16Mo3","13CrMo4-5","10CrMo9-10","X10CrMoVNb9-1 (P91)","ASTM A106 Gr.B","ASTM A105","ASTM A335 P11","ASTM A335 P22","AISI 304L","AISI 316L","AISI 321","Duplex 2205 (1.4462)"];
+const APP=["ALUNOX AX 308L","ER70S-6 (G3Si1)","ER308LSi","ER316LSi","E7018 (E 42 4 B)","E308L-16","E316L-16","ER80S-B2","ER90S-B3","E71T-1"];
+const AZ="Cam Power s.r.l.";
+
+/* ---------- utilità ---------- */
+const $=id=>document.getElementById(id);
+const num=v=>{if(v===""||v==null)return null;const n=parseFloat(String(v).replace(",","."));return isFinite(n)?n:null};
+const f=(n,d=1)=>n==null?"":n.toLocaleString("it-IT",{minimumFractionDigits:d,maximumFractionDigits:d});
+const oggiIso=()=>{const d=new Date();return new Date(d-d.getTimezoneOffset()*6e4).toISOString().slice(0,10)};
+const uid=()=>Date.now().toString(36)+Math.random().toString(36).slice(2,7);
+const esc=s=>String(s??"").replace(/[&<>"]/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;"}[c]));
+const dIt=s=>s?s.split("-").reverse().join("/"):"";
+const mmss=s=>{s=Math.max(0,Math.round(s));return `${Math.floor(s/60)}:${String(s%60).padStart(2,"0")}`};
+function toast(m){const t=$("toast");t.textContent=m;t.hidden=false;clearTimeout(toast._t);toast._t=setTimeout(()=>t.hidden=true,2600)}
+function opts(sel,list,lab){sel.innerHTML=list.map(x=>Array.isArray(x)?`<option value="${esc(x[0])}">${esc(x[1])}</option>`:`<option value="${esc(x)}">${esc(lab?lab(x):(x||"—"))}</option>`).join("")}
+function kFor(p){const r=PROC.find(x=>x[0]===String(p));return r?r[2]:null}
+
+/* calcoli: v da lunghezza e tempo; Q = U·I·60·k/(v·1000) kJ/cm */
+function velocita(p){const L=num(p.L),t=num(p.t);if(L&&t)return 6*L/t;return num(p.v)}
+function apporto(p,k){const U=num(p.U),I=num(p.I),v=velocita(p);if(!U||!I||!v||k==null)return null;return U*I*60*k/(v*1000)}
+
+/* ---------- archivio: db condiviso + copia locale di sicurezza ---------- */
+let db=null, dlCap=null, docs={}, loaded=false;
+const LS="wpqr.verbali.v1";
+function lsRead(){try{return JSON.parse(localStorage.getItem(LS)||"{}")}catch{return{}}}
+function lsWrite(o){try{localStorage.setItem(LS,JSON.stringify(o))}catch{}}
+function setSync(txt,cls){const c=$("syncChip");c.textContent=txt;c.className="chip"+(cls?" "+cls:"")}
+
+function nuovoVerbale(){
+  return{id:uid(),creato:new Date().toISOString(),aggiornato:new Date().toISOString(),
+    gen:{azienda:AZ,verbale:"",norma:NORME[0],data:oggiIso(),saldatore:"",punzone:"",pwps:"",ente:""},
+    giu:{processo:"135",tipo:"BW",posizione:"PA",materiale:"",spessore:"",diamTubo:"",apporto:"",diametro:"1.2",gas:"M21 · Ar 82% + CO2 18%",portata:"15",preriscaldo:"",interpassMax:"",k:"0.8"},
+    passate:[nuovaPassata(null,"135","1.2")],firme:{saldatore:"",rq:"",ente:""},note:""};
+}
+function nuovaPassata(prev,proc,dia){
+  return prev?{proc:prev.proc,pol:prev.pol,dia:prev.dia,I:prev.I,U:prev.U,L:prev.L,t:"",v:"",Ti:"",note:"",startAt:null}
+             :{proc:proc||"135",pol:"DC EP",dia:dia||"",I:"",U:"",L:"",t:"",v:"",Ti:"",note:"",startAt:null};
+}
+
+let saveTimer=null, pending=new Set();
+function scheduleSave(v){
+  v.aggiornato=new Date().toISOString();docs[v.id]=v;
+  const local=lsRead();local[v.id]=v;lsWrite(local);
+  pending.add(v.id);setSync("modifiche…");
+  clearTimeout(saveTimer);saveTimer=setTimeout(flush,1200);
+}
+async function flush(){pending.clear();setSync("salvato sul telefono","ok")}
+async function initStore(){
+  docs={...lsRead()};loaded=true;setSync("salvato sul telefono","ok");
+  try{if(navigator.storage&&navigator.storage.persist)await navigator.storage.persist()}catch{}
+  const n=Object.keys(docs).length;
+  $("storeHint").textContent=n?"":"I verbali restano su questo telefono. Ricorda ogni tanto di fare un Backup su iCloud Drive.";
+  renderList();refreshDatalists();
+}
+/* salvataggio file: condivisione iOS (Salva in File, AirDrop, Stampa) o download */
+async function saveFile(name,blob,type){
+  const file=new File([blob],name,{type});
+  try{if(navigator.canShare&&navigator.canShare({files:[file]})){await navigator.share({files:[file],title:name});return true}}
+  catch(e){if(e&&e.name==="AbortError")return false}
+  const a=document.createElement("a");a.href=URL.createObjectURL(blob);a.download=name;document.body.appendChild(a);a.click();
+  setTimeout(()=>{URL.revokeObjectURL(a.href);a.remove()},4000);return true;
+}
+/* backup e ripristino */
+async function backup(){
+  const all=Object.values(docs);if(!all.length){toast("Nessun verbale da salvare");return}
+  const blob=new Blob([JSON.stringify({app:"registro-qualifiche",versione:1,data:new Date().toISOString(),verbali:all},null,1)],{type:"application/json"});
+  if(await saveFile(`Backup_Qualifiche_${oggiIso()}.json`,blob,"application/json"))toast(`Backup di ${all.length} verbali pronto`);
+}
+function ripristina(file){
+  const r=new FileReader();r.onload=()=>{try{
+    const d=JSON.parse(r.result);const arr=Array.isArray(d)?d:(d.verbali||[]);let n=0;
+    for(const v of arr){if(!v||!v.id||!v.gen)continue;const ex=docs[v.id];if(!ex||(v.aggiornato||"")>(ex.aggiornato||"")){docs[v.id]=v;n++}}
+    lsWrite(docs);renderList();refreshDatalists();toast(n?`Importati ${n} verbali`:"Nessun verbale nuovo nel file");
+  }catch{toast("File non valido: scegli un backup del Registro Qualifiche")}};r.readAsText(file);
+}
+
+/* ---------- elenco ---------- */
+function renderList(){
+  const q=$("search").value.trim().toLowerCase();
+  const arr=Object.values(docs).filter(v=>!q||JSON.stringify([v.gen,v.giu.materiale,v.giu.tipo,v.giu.processo]).toLowerCase().includes(q))
+    .sort((a,b)=>(b.gen.data||"").localeCompare(a.gen.data||"")||(b.aggiornato||"").localeCompare(a.aggiornato||""));
+  const L=$("list");
+  if(!arr.length){L.innerHTML=q?`<div class="empty">Nessun verbale corrisponde a «${esc(q)}».</div>`
+    :`<div class="empty">Nessun verbale ancora.<br>Tocca <b>+ Nuovo verbale</b> all'inizio della prova: i dati si salvano mentre li inserisci.</div>`;return}
+  L.innerHTML=arr.map(v=>{
+    const Qs=v.passate.map(p=>apporto(p,num(v.giu.k))).filter(x=>x!=null);
+    const tTot=v.passate.reduce((s,p)=>s+(num(p.t)||0),0);
+    return `<button class="row" data-id="${esc(v.id)}">
+      <span class="t">${esc(v.gen.saldatore||"Saldatore da indicare")}${v.esempio?' <span class="ex">esempio</span>':""}</span>
+      <span class="chip">${esc(v.giu.processo)} · ${esc(v.giu.tipo)} · ${esc(v.giu.posizione)}</span>
+      <span class="m"><span class="mono">${esc(dIt(v.gen.data))}</span><span>${esc(v.gen.verbale||"n° verbale —")}</span>
+      <span>${esc(v.giu.materiale||"materiale —")}${v.giu.spessore?" · "+esc(v.giu.spessore)+" mm":""}</span>
+      <span class="mono">${v.passate.length} pass. · ${mmss(tTot)}${Qs.length?` · Q ${f(Math.min(...Qs),2)}–${f(Math.max(...Qs),2)} kJ/cm`:""}</span></span></button>`}).join("");
+}
+$("list").addEventListener("click",e=>{const b=e.target.closest(".row");if(b)openEditor(b.dataset.id)});
+$("search").addEventListener("input",renderList);
+$("btnNew").addEventListener("click",()=>{const v=nuovoVerbale();
+  const last=Object.values(docs).sort((a,b)=>(b.aggiornato||"").localeCompare(a.aggiornato||""))[0];
+  if(last){v.gen.ente=last.gen.ente;v.firme.rq=last.firme.rq;v.firme.ente=last.firme.ente}
+  docs[v.id]=v;scheduleSave(v);openEditor(v.id)});
+
+function refreshDatalists(){
+  const all=Object.values(docs),u=(arr)=>[...new Set(arr.filter(Boolean))].sort();
+  $("dlSald").innerHTML=u(all.map(v=>v.gen.saldatore)).map(x=>`<option value="${esc(x)}">`).join("");
+  $("dlPwps").innerHTML=u(all.map(v=>v.gen.pwps)).map(x=>`<option value="${esc(x)}">`).join("");
+  $("dlEnte").innerHTML=u(all.map(v=>v.gen.ente)).map(x=>`<option value="${esc(x)}">`).join("");
+  $("dlMat").innerHTML=u([...MAT,...all.map(v=>v.giu.materiale)]).map(x=>`<option value="${esc(x)}">`).join("");
+  $("dlApp").innerHTML=u([...APP,...all.map(v=>v.giu.apporto)]).map(x=>`<option value="${esc(x)}">`).join("");
+}
+
+/* ---------- editor ---------- */
+let cur=null;
+opts($("g_norma"),NORME);opts($("j_proc"),PROC.map(x=>[x[0],x[1]]));opts($("j_tipo"),TIPI);opts($("j_pos"),POS);
+opts($("j_dia"),DIA);opts($("j_gas"),GAS);
+const get=(o,p)=>p.split(".").reduce((a,k)=>a?.[k],o);
+const set=(o,p,v)=>{const ks=p.split(".");const last=ks.pop();ks.reduce((a,k)=>a[k]??={},o)[last]=v};
+
+function ensureOption(sel,val){if(val&&![...sel.options].some(o=>o.value===val)){const o=document.createElement("option");o.value=o.textContent=val;sel.appendChild(o)}}
+function openEditor(id){
+  cur=JSON.parse(JSON.stringify(docs[id]));
+  document.querySelectorAll("#viewEdit [data-k]").forEach(el=>{const v=get(cur,el.dataset.k)??"";if(el.tagName==="SELECT")ensureOption(el,v);el.value=v});
+  $("viewList").hidden=true;$("viewEdit").hidden=false;$("btnBack").hidden=false;$("btnPdf").hidden=false;
+  updateTitle();renderPasses();refreshDatalists();window.scrollTo(0,0);
+  $("btnDel").classList.remove("armed");$("btnDel").textContent="Elimina verbale";
+}
+function closeEditor(){stopAllTimers(false);if(cur){if(pending.has(cur.id))flush();docs[cur.id]=cur}cur=null;
+  $("viewEdit").hidden=true;$("viewList").hidden=false;$("btnBack").hidden=true;$("btnPdf").hidden=true;
+  $("barTitle").firstChild.textContent="Registro Qualifiche";$("barSub").textContent="Verbali WPQR · "+NORME[0];renderList();window.scrollTo(0,0)}
+$("btnBack").addEventListener("click",closeEditor);
+function updateTitle(){$("barTitle").firstChild.textContent=cur.gen.saldatore||"Nuovo verbale";
+  $("barSub").textContent=[cur.gen.verbale||"WPQR —",dIt(cur.gen.data),cur.giu.processo+" "+cur.giu.tipo].join(" · ")}
+
+$("viewEdit").addEventListener("input",e=>{
+  const el=e.target;if(!cur)return;
+  if(el.dataset.k){set(cur,el.dataset.k,el.value);
+    if(el.dataset.k==="giu.processo"){const k=kFor(el.value);if(k!=null){cur.giu.k=String(k);$("j_k").value=k}
+      cur.passate.forEach(p=>{if(!p.t&&!p.I)p.proc=el.value});renderPasses()}
+    if(el.dataset.k==="giu.k"||el.dataset.k==="giu.interpassMax")refreshDerived();
+    if(el.dataset.k==="gen.saldatore"&&!cur.firme.saldatore){/* firma = saldatore, finché non la cambi */}
+    updateTitle();scheduleSave(cur);return}
+  const pc=el.closest(".pass");if(pc&&el.dataset.p){const i=+pc.dataset.i;cur.passate[i][el.dataset.p]=el.value;refreshDerived();scheduleSave(cur)}
+});
+$("viewEdit").addEventListener("change",e=>{if(e.target.id==="g_sald"&&!cur.firme.saldatore){cur.firme.saldatore=cur.gen.saldatore;$("s_s").value=cur.gen.saldatore;scheduleSave(cur)}});
+
+function passHtml(p,i){
+  const run=!!p.startAt;
+  return `<div class="pass${run?" running":""}" data-i="${i}">
+   <div class="pass-h"><span class="n">${i+1}</span><span class="chip">${esc(p.proc)} · ${esc(p.pol)}</span>
+     <span class="q"><span class="chip" data-d="v"></span><span class="chip" data-d="Q"></span><span class="chip" data-d="Ti"></span></span></div>
+   <div class="pass-b">
+     <div class="timer"><span class="clock" data-d="clock">${mmss(num(p.t)||0)}</span>
+       <button class="btn go" data-a="timer">${run?"■ Stop":(num(p.t)?"↻ Rifai":"▶ Avvia")}</button></div>
+     <label class="f"><span>Procedimento</span><select data-p="proc">${PROC.map(x=>`<option value="${x[0]}"${x[0]===String(p.proc)?" selected":""}>${x[0]}</option>`).join("")}</select></label>
+     <label class="f"><span>Polarità</span><select data-p="pol">${POL.map(x=>`<option${x===p.pol?" selected":""}>${x}</option>`).join("")}</select></label>
+     <label class="f"><span>Ø (mm)</span><select data-p="dia">${(DIA.includes(String(p.dia))?DIA:[...DIA,p.dia]).map(x=>`<option value="${esc(x)}"${String(x)===String(p.dia)?" selected":""}>${x||"—"}</option>`).join("")}</select></label>
+     <label class="f"><span>Corrente I (A)</span><input class="num" inputmode="decimal" data-p="I" value="${esc(p.I)}"></label>
+     <label class="f"><span>Tensione U (V)</span><input class="num" inputmode="decimal" data-p="U" value="${esc(p.U)}"></label>
+     <label class="f"><span>Lungh. cordone (mm)</span><input class="num" inputmode="decimal" data-p="L" value="${esc(p.L)}"></label>
+     <label class="f"><span>Tempo (s)</span><input class="num" inputmode="decimal" data-p="t" value="${esc(p.t)}"></label>
+     <label class="f"><span>Velocità (cm/min)</span><input class="num" inputmode="decimal" data-p="v" value="${esc(p.v)}" placeholder="da L e t"></label>
+     <label class="f"><span>T interpass (°C)</span><input class="num" inputmode="decimal" data-p="Ti" value="${esc(p.Ti)}"></label>
+     <label class="f" style="grid-column:1/-1"><span>Note</span><input data-p="note" value="${esc(p.note)}"></label>
+   </div>
+   <div class="pass-f">${i>0?`<button class="btn ghost" data-a="up">↑</button>`:""}<button class="btn ghost" data-a="dup">Duplica</button><button class="btn ghost danger" data-a="del">Elimina</button></div>
+  </div>`;
+}
+function renderPasses(){$("passes").innerHTML=cur.passate.map(passHtml).join("");refreshDerived()}
+function refreshDerived(){
+  const k=num(cur.giu.k),Tmax=num(cur.giu.interpassMax);
+  let Qs=[],tTot=0,Tis=[];
+  document.querySelectorAll("#passes .pass").forEach(el=>{
+    const p=cur.passate[+el.dataset.i];const v=velocita(p),Q=apporto(p,k),Ti=num(p.Ti);
+    const auto=num(p.L)&&num(p.t);
+    const vEl=el.querySelector('[data-p="v"]');vEl.placeholder=auto?f(v,2):"da L e t";vEl.disabled=!!auto;if(auto)vEl.value="";
+    el.querySelector('[data-d="v"]').textContent=v?`v ${f(v,1)} cm/min`:"v —";
+    const qc=el.querySelector('[data-d="Q"]');qc.textContent=Q!=null?`Q ${f(Q,2)} kJ/cm`:"Q —";qc.className="chip"+(Q!=null?" ok":"");
+    const tc=el.querySelector('[data-d="Ti"]');
+    if(Ti!=null){const over=Tmax!=null&&Ti>Tmax;tc.hidden=false;tc.textContent=`${f(Ti,0)} °C${over?" > max":""}`;tc.className="chip"+(over?" bad":"")}else tc.hidden=true;
+    if(!p.startAt)el.querySelector('[data-d="clock"]').textContent=mmss(num(p.t)||0);
+    if(Q!=null)Qs.push(Q);tTot+=num(p.t)||0;if(Ti!=null)Tis.push(Ti);
+  });
+  const over=Tmax!=null&&Tis.some(t=>t>Tmax);
+  $("summary").innerHTML=`<div class="stat"><span>Passate</span><b>${cur.passate.length}</b></div>
+   <div class="stat"><span>Tempo totale</span><b>${mmss(tTot)}</b></div>
+   <div class="stat"><span>Q min – max (kJ/cm)</span><b>${Qs.length?f(Math.min(...Qs),2)+" – "+f(Math.max(...Qs),2):"—"}</b></div>
+   <div class="stat"><span>Interpass max rilevata</span><b style="color:${over?"var(--bad)":"inherit"}">${Tis.length?f(Math.max(...Tis),0)+" °C":"—"}</b></div>`;
+}
+$("passes").addEventListener("click",e=>{
+  const b=e.target.closest("[data-a]");if(!b)return;const el=b.closest(".pass"),i=+el.dataset.i,a=b.dataset.a;
+  if(a==="timer")return toggleTimer(i);
+  if(a==="dup"){cur.passate.splice(i+1,0,{...cur.passate[i],t:"",Ti:"",note:"",startAt:null})}
+  if(a==="up"&&i>0){[cur.passate[i-1],cur.passate[i]]=[cur.passate[i],cur.passate[i-1]]}
+  if(a==="del"){if(b.classList.contains("armed")){cur.passate.splice(i,1);if(!cur.passate.length)cur.passate.push(nuovaPassata(null,cur.giu.processo,cur.giu.diametro))}
+    else{b.classList.add("armed");b.textContent="Conferma";setTimeout(()=>{b.classList.remove("armed");b.textContent="Elimina"},3000);return}}
+  renderPasses();scheduleSave(cur);
+});
+$("btnAddPass").addEventListener("click",()=>{const prev=cur.passate[cur.passate.length-1];
+  cur.passate.push(nuovaPassata(prev,cur.giu.processo,cur.giu.diametro));renderPasses();scheduleSave(cur);
+  $("passes").lastElementChild.scrollIntoView({behavior:"smooth",block:"start"})});
+
+/* ---------- cronometro ---------- */
+let tick=null,wake=null;
+async function lockScreen(on){try{if(on&&navigator.wakeLock&&!wake){wake=await navigator.wakeLock.request("screen");wake.addEventListener("release",()=>wake=null)}
+  if(!on&&wake){await wake.release();wake=null}}catch{wake=null}}
+function toggleTimer(i){
+  const p=cur.passate[i];
+  if(p.startAt){p.t=String(Math.round((Date.now()-p.startAt)/1000));p.startAt=null;
+    if(!cur.passate.some(x=>x.startAt)){clearInterval(tick);tick=null;lockScreen(false)}
+    renderPasses();scheduleSave(cur);toast(`Passata ${i+1}: ${p.t} s`);return}
+  cur.passate.forEach((x,j)=>{if(x.startAt&&j!==i){x.t=String(Math.round((Date.now()-x.startAt)/1000));x.startAt=null}});
+  p.startAt=Date.now();p.t="";renderPasses();scheduleSave(cur);lockScreen(true);
+  clearInterval(tick);tick=setInterval(()=>{const r=cur&&cur.passate.findIndex(x=>x.startAt);if(r==null||r<0)return;
+    const el=document.querySelector(`#passes .pass[data-i="${r}"] [data-d="clock"]`);if(el)el.textContent=mmss((Date.now()-cur.passate[r].startAt)/1000)},250);
+}
+function stopAllTimers(save){if(!cur)return;let ch=false;cur.passate.forEach(x=>{if(x.startAt){x.t=String(Math.round((Date.now()-x.startAt)/1000));x.startAt=null;ch=true}});
+  clearInterval(tick);tick=null;lockScreen(false);if(ch&&save!==false)scheduleSave(cur);else if(ch)scheduleSave(cur)}
+document.addEventListener("visibilitychange",()=>{if(!document.hidden&&cur&&cur.passate.some(x=>x.startAt))lockScreen(true)});
+
+/* ---------- duplica / elimina ---------- */
+$("btnDup").addEventListener("click",()=>{stopAllTimers();const v=JSON.parse(JSON.stringify(cur));v.id=uid();v.creato=new Date().toISOString();delete v.esempio;
+  v.gen.verbale="";v.gen.data=oggiIso();v.gen.saldatore="";v.gen.punzone="";v.firme.saldatore="";
+  v.passate=v.passate.map(p=>({...p,t:"",Ti:"",note:"",startAt:null,v:""}));
+  docs[cur.id]=cur;docs[v.id]=v;scheduleSave(v);openEditor(v.id);toast("Copia creata: stessi parametri, nuovo saldatore")});
+$("btnDel").addEventListener("click",e=>{const b=e.currentTarget;
+  if(!b.classList.contains("armed")){b.classList.add("armed");b.textContent="Tocca di nuovo per eliminare";setTimeout(()=>{b.classList.remove("armed");b.textContent="Elimina verbale"},4000);return}
+  const id=cur.id;stopAllTimers(false);pending.delete(id);delete docs[id];const loc=lsRead();delete loc[id];lsWrite(loc);cur=null;
+  closeEditor();toast("Verbale eliminato")});
+
+/* ---------- PDF ---------- */
+function buildPdf(v){
+  const {jsPDF}=window.jspdf;const doc=new jsPDF({orientation:"landscape",unit:"mm",format:"a4"});
+  const W=297,M=12,blue=[29,79,122],grey=[90,100,112];const k=num(v.giu.k);
+  doc.setFillColor(...blue);doc.rect(0,0,W,20,"F");doc.setTextColor(255);doc.setFont("helvetica","bold");doc.setFontSize(14);
+  doc.text("VERBALE DI QUALIFICA DEL PROCEDIMENTO DI SALDATURA (WPQR)",M,9);
+  doc.setFont("helvetica","normal");doc.setFontSize(8.5);doc.text("Registrazione parametri di saldatura per passata - impostazione "+(v.gen.norma||""),M,15);
+  doc.text((v.gen.azienda||"")+"   |   Verbale n° "+(v.gen.verbale||"-"),W-M,15,{align:"right"});
+  doc.setTextColor(20);
+  const kv=(rows)=>rows.map(r=>r.map(c=>c==null||c===""?"-":String(c)));
+  const head2=(y,t)=>{doc.setFont("helvetica","bold");doc.setFontSize(9.5);doc.setTextColor(...blue);doc.text(t,M,y);doc.setTextColor(20)};
+  const base={theme:"grid",styles:{font:"helvetica",fontSize:8.2,cellPadding:1.6,lineColor:[190,198,206],lineWidth:.2,textColor:20},margin:{left:M,right:M}};
+  head2(27,"1. DATI GENERALI    2. GIUNTO, MATERIALE E PROCEDIMENTO");
+  const proc=PROC.find(x=>x[0]===String(v.giu.processo));
+  doc.autoTable({...base,startY:29,
+    columnStyles:{0:{fontStyle:"bold",fillColor:[236,240,244],cellWidth:42},1:{cellWidth:50},2:{fontStyle:"bold",fillColor:[236,240,244],cellWidth:44},3:{cellWidth:46},4:{fontStyle:"bold",fillColor:[236,240,244],cellWidth:42},5:{}},
+    body:kv([
+      ["Azienda esecutrice",v.gen.azienda,"Procedimento (EN ISO 4063)",proc?proc[1].replace(" · "," - "):v.giu.processo,"Materiale d'apporto",v.giu.apporto],
+      ["N° verbale / WPQR",v.gen.verbale,"Tipo di giunto",v.giu.tipo,"Diametro apporto (mm)",v.giu.diametro],
+      ["Norma di riferimento",v.gen.norma,"Posizione (ISO 6947)",v.giu.posizione,"Gas / portata",[v.giu.gas,v.giu.portata?v.giu.portata+" l/min":""].filter(Boolean).join(", ")],
+      ["Data prova",dIt(v.gen.data),"Materiale base",v.giu.materiale,"Preriscaldo (°C)",v.giu.preriscaldo],
+      ["Saldatore / operatore",[v.gen.saldatore,v.gen.punzone?"("+v.gen.punzone+")":""].filter(Boolean).join(" "),"Spessore (mm)",v.giu.spessore,"Interpass max (°C)",v.giu.interpassMax],
+      ["N° pWPS di riferimento",v.gen.pwps,"Diametro tubo (mm)",v.giu.diamTubo,"Rendimento k (EN 1011-1)",k!=null?f(k,1):""],
+      ["Ente / ispettore",v.gen.ente,"","","",""]])});
+  let y=doc.lastAutoTable.finalY+6;head2(y,"3. PARAMETRI DI SALDATURA PER PASSATA");
+  let tTot=0;const Qs=[];
+  const body=v.passate.map((p,i)=>{const vv=velocita(p),Q=apporto(p,k);tTot+=num(p.t)||0;if(Q!=null)Qs.push(Q);
+    const Ti=num(p.Ti),Tm=num(v.giu.interpassMax);
+    return[i+1,p.proc,p.pol,p.dia,p.I,p.U,p.L,p.t,vv?f(vv,2):"",Q!=null?f(Q,2):"",p.Ti?(p.Ti+(Tm!=null&&Ti>Tm?" (>max)":"")):"",p.note]});
+  doc.autoTable({...base,startY:y+2,head:[["N°","Proc.","Polarità","Ø (mm)","I (A)","U (V)","L cordone (mm)","Tempo (s)","v (cm/min)","Q (kJ/cm)","T interpass (°C)","Note"]],
+    headStyles:{fillColor:blue,textColor:255,fontStyle:"bold",halign:"center",fontSize:7.8},
+    bodyStyles:{halign:"center"},columnStyles:{11:{halign:"left",cellWidth:46}},
+    body:body.map(r=>r.map(c=>c==null?"":String(c))),
+    foot:[["","","","","","","Totale",String(tTot),"",Qs.length?f(Math.min(...Qs),2)+" - "+f(Math.max(...Qs),2):"","",""]],
+    footStyles:{fillColor:[236,240,244],textColor:20,fontStyle:"bold",halign:"center"}});
+  y=doc.lastAutoTable.finalY+4;doc.setFont("helvetica","italic");doc.setFontSize(7.2);doc.setTextColor(...grey);
+  doc.text("Q (kJ/cm) = (U x I x 60 x k) / (v x 1000). Velocità calcolata da lunghezza del cordone e tempo di passata quando entrambi sono rilevati; tempi misurati con cronometro.",M,y);
+  if(v.note){y+=5;doc.setFont("helvetica","normal");doc.setTextColor(20);doc.setFontSize(8);const t=doc.splitTextToSize("Note: "+v.note,W-2*M);doc.text(t,M,y);y+=t.length*3.6}
+  if(y>165){doc.addPage();y=15}else y+=8;
+  head2(y,"4. FIRME");y+=3;const bw=(W-2*M-12)/3;
+  [["Saldatore / operatore",v.firme.saldatore],["Responsabile qualità",v.firme.rq],["Ente terzo / ispettore",v.firme.ente]].forEach((c,i)=>{
+    const x=M+i*(bw+6);doc.setDrawColor(190,198,206);doc.rect(x,y,bw,22);doc.setFont("helvetica","bold");doc.setFontSize(8);doc.setTextColor(...grey);doc.text(c[0],x+2,y+5);
+    doc.setFont("helvetica","normal");doc.setTextColor(20);doc.text(c[1]||"",x+2,y+10);doc.setTextColor(...grey);doc.text("Firma",x+2,y+19);doc.line(x+14,y+19,x+bw-4,y+19)});
+  const n=doc.getNumberOfPages();for(let i=1;i<=n;i++){doc.setPage(i);doc.setFontSize(7);doc.setTextColor(...grey);
+    doc.text(`Generato il ${new Date().toLocaleString("it-IT")}  -  Pag. ${i}/${n}`,W-M,205,{align:"right"})}
+  return doc.output("blob");
+}
+async function exportPdf(){
+  if(!cur)return;stopAllTimers();
+  if(!window.jspdf){toast("Modulo PDF non caricato: controlla la connessione e riapri la pagina");return}
+  let blob;try{blob=buildPdf(cur)}catch(e){toast("PDF non generato: "+e.message);return}
+  const name=("WPQR_"+[cur.gen.verbale,cur.gen.saldatore,cur.gen.data].filter(Boolean).join("_")).replace(/[^\w\-àèéìòù]+/gi,"_")+".pdf";
+  if(await saveFile(name,blob,"application/pdf"))toast("PDF pronto: "+name);
+}
+$("btnPdf").addEventListener("click",exportPdf);$("btnPdf2").addEventListener("click",exportPdf);
+
+/* ---------- avvio ---------- */
+$("btnBackup").addEventListener("click",backup);
+$("fileRestore").addEventListener("change",e=>{const f=e.target.files[0];if(f)ripristina(f);e.target.value=""});
+setSync("caricamento…");renderList();refreshDatalists();initStore();
+if("serviceWorker" in navigator)navigator.serviceWorker.register("sw.js").catch(()=>{});
+</script>
+
+</body></html>
